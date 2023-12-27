@@ -7,8 +7,8 @@
         :style="style"
         :scroll-y="true"
         :adjust-position="false"
+        :scroll-top="scrollTop"
         :scroll-with-animation="scrollAnimation"
-        :scroll-into-view="scrollToView"
         @scrolltoupper="reachTop"
         @scrolltolower="reachBottom"
         upper-threshold="50"
@@ -23,8 +23,7 @@
             <view class="rect5"></view>
           </view>
         </view>
-        <div class="mainArea">
-          <div class="sit"></div>
+        <div class="mainArea" id="mainArea">
           <view
             class="row"
             v-for="(row, index) in msgList"
@@ -144,7 +143,6 @@
         textMsg: "",
         //消息列表
         scrollAnimation: false,
-        scrollToView: "",
         msgList: [],
         msgImgList: [],
         myuid: 0,
@@ -157,21 +155,23 @@
         popupLayerClass: "",
         // more参数
         hideMore: true,
+        scrollTop: 0,
       };
     },
 
     computed: {
-      style() {
+      chatHeight() {
         const CustomBar = this.CustomBar;
-        let style = "";
+        let height = 0;
         uni.getSystemInfo({
           success: function (e) {
-            style = `padding-bottom:50px;height:${
-              e.screenHeight - CustomBar - 50
-            }px;`;
+            height = e.screenHeight - CustomBar - 50;
           },
         });
-        return style;
+        return height;
+      },
+      style() {
+        return `padding-bottom:50px;height:${this.chatHeight}px;`;
       },
     },
 
@@ -260,12 +260,6 @@
           console.log("振动");
           // uni.vibrateLong();
         }
-        if (this.isBottom) {
-          this.$nextTick(() => {
-            // 滚动到底
-            this.scrollToView = "msg" + msg.id;
-          });
-        }
       },
 
       // 获取分页消息
@@ -278,6 +272,99 @@
         if (this.showLoading) return;
         this.showLoading = true; //开启 loading 动画
         this.scrollAnimation = false; //关闭滑动动画
+        let list = [
+          {
+            id: 2,
+            showTime: false,
+            time: new Date().getTime(),
+            type: "text",
+            userinfo: {
+              uid: this.myuid,
+              username: "尘落笔记",
+              face: "",
+            },
+            content: {
+              url: "",
+              text: "111111111",
+            },
+          },
+          {
+            id: 3,
+            showTime: false,
+            time: new Date().getTime(),
+            type: "text",
+            userinfo: {
+              uid: 666,
+              username: "尘落笔记",
+              face: "",
+            },
+            content: {
+              url: "",
+              text: "22222222222",
+            },
+          },
+          {
+            id: 4,
+            showTime: false,
+            time: new Date().getTime(),
+            type: "text",
+            userinfo: {
+              uid: this.myuid,
+              username: "尘落笔记",
+              face: "",
+            },
+            content: {
+              url: "",
+              text: "111111111",
+            },
+          },
+          {
+            id: 5,
+            showTime: false,
+            time: new Date().getTime(),
+            type: "text",
+            userinfo: {
+              uid: 666,
+              username: "尘落笔记",
+              face: "",
+            },
+            content: {
+              url: "",
+              text: "22222222222",
+            },
+          },
+          {
+            id: 6,
+            showTime: false,
+            time: new Date().getTime(),
+            type: "text",
+            userinfo: {
+              uid: this.myuid,
+              username: "尘落笔记",
+              face: "",
+            },
+            content: {
+              url: "",
+              text: "111111111",
+            },
+          },
+          {
+            id: 7,
+            showTime: false,
+            time: new Date().getTime(),
+            type: "text",
+            userinfo: {
+              uid: 666,
+              username: "尘落笔记",
+              face: "",
+            },
+            content: {
+              url: "",
+              text: "22222222222",
+            },
+          },
+        ];
+        this.msgList = [...this.msgList, ...list];
       },
 
       // 加载初始页面消息
@@ -411,10 +498,26 @@
         // 发送消息
         this.screenMsg(msg);
       },
+      scrollBottom() {
+        if (this.scrollTop === 100) return;
+        // 第一屏后不触发
+        this.$nextTick(() => {
+          const query = uni.createSelectorQuery().in(this);
+          query
+            .select("#mainArea")
+            .boundingClientRect((data) => {
+              if (data.height > +this.chatHeight) {
+                this.scrollTop = 100;
+              }
+            })
+            .exec();
+        });
+      },
 
       // 添加文字消息到列表
       addTextMsg(msg, receiveType) {
         this.msgList.unshift(msg);
+        this.scrollBottom();
         if (receiveType === "get") return;
         // socket区域 发送文字
         ws.send({
@@ -455,12 +558,7 @@
   @import "./style.scss";
   .mainArea {
     width: 100%;
-    height: 100%;
-    overflow-y: auto;
     display: flex;
     flex-direction: column-reverse;
-    .sit {
-      flex: 1;
-    }
   }
 </style>
