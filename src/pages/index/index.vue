@@ -156,6 +156,7 @@
         // more参数
         hideMore: true,
         scrollTop: 0,
+        firstLoad: false,
       };
     },
 
@@ -365,6 +366,7 @@
           },
         ];
         this.msgList = [...this.msgList, ...list];
+        this.showLoading = false;
       },
 
       // 加载初始页面消息
@@ -499,7 +501,7 @@
         this.screenMsg(msg);
       },
       scrollBottom() {
-        if (this.scrollTop === 100) return;
+        if (this.firstLoad) return;
         // 第一屏后不触发
         this.$nextTick(() => {
           const query = uni.createSelectorQuery().in(this);
@@ -507,7 +509,8 @@
             .select("#mainArea")
             .boundingClientRect((data) => {
               if (data.height > +this.chatHeight) {
-                this.scrollTop = 100;
+                this.scrollTop = data.height;
+                this.firstLoad = true;
               }
             })
             .exec();
